@@ -8,7 +8,7 @@ function App() {
   const [incidents, setIncidents] = useState([]);
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [signals, setSignals] = useState([]);
-  const [rcaForm, setRcaForm] = useState({ root_cause_category: 'Hardware', fix_applied: '', prevention_steps: '' });
+  const [rcaForm, setRcaForm] = useState({ root_cause_category: 'Hardware', fix_applied: '', prevention_steps: '', incident_start: '', incident_end: '' });
 
   useEffect(() => {
     fetchIncidents();
@@ -54,7 +54,10 @@ function App() {
     e.preventDefault();
     if (!selectedIncident) return;
     try {
-      await axios.post(`${API_URL}/incidents/${selectedIncident.id}/rca`, rcaForm);
+      let formattedRCA = { ...rcaForm };
+      if (formattedRCA.incident_start) formattedRCA.incident_start = new Date(formattedRCA.incident_start).toISOString();
+      if (formattedRCA.incident_end) formattedRCA.incident_end = new Date(formattedRCA.incident_end).toISOString();
+      await axios.post(`${API_URL}/incidents/${selectedIncident.id}/rca`, formattedRCA);
       fetchIncidents();
       setSelectedIncident({ ...selectedIncident, status: 'CLOSED' });
       alert("RCA submitted and incident closed.");
@@ -157,6 +160,16 @@ function App() {
                     <AlertCircle className="w-5 h-5 text-indigo-500" /> Mandatory Root Cause Analysis
                   </div>
                   <form onSubmit={submitRCA} className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Incident Start</label>
+                        <input type="datetime-local" required className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" value={rcaForm.incident_start} onChange={e => setRcaForm({...rcaForm, incident_start: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Incident End</label>
+                        <input type="datetime-local" required className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" value={rcaForm.incident_end} onChange={e => setRcaForm({...rcaForm, incident_end: e.target.value})} />
+                      </div>
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Root Cause Category</label>
                       <select required className="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" value={rcaForm.root_cause_category} onChange={e => setRcaForm({...rcaForm, root_cause_category: e.target.value})}>

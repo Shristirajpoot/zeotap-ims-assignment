@@ -42,6 +42,8 @@ class RCARecord(Base):
     root_cause_category = Column(String, nullable=False)
     fix_applied = Column(Text, nullable=False)
     prevention_steps = Column(Text, nullable=False)
+    incident_start = Column(DateTime, nullable=True)
+    incident_end = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     mttr_minutes = Column(Float, nullable=True)
 
@@ -58,6 +60,8 @@ class RCAForm(BaseModel):
     root_cause_category: str
     fix_applied: str
     prevention_steps: str
+    incident_start: datetime | None = None
+    incident_end: datetime | None = None
 
 class WorkItemOut(BaseModel):
     id: str

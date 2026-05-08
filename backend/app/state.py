@@ -59,15 +59,22 @@ class ResolvedState(IncidentState):
             
             if rca_data and not existing_rca:
                 # MTTR Calculation
-                end_time = datetime.utcnow()
-                start_time = work_item.created_at
-                mttr_minutes = (end_time - start_time).total_seconds() / 60.0
+                # Use provided incident start/end times if available, otherwise fallback
+                start_time_str = rca_data.get("incident_start")
+                end_time_str = rca_data.get("incident_end")
+                
+                start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00')).replace(tzinfo=None) if start_time_str else work_item.created_at
+                end_time = datetime.fromisoformat(end_time_str.replace('Z', '+00:00')).replace(tzinfo=None) if end_time_str else datetime.utcnow()
+                
+                mttr_minutes = max((end_time - start_time).total_seconds() / 60.0, 0)
 
                 rca = RCARecord(
                     work_item_id=work_item.id,
                     root_cause_category=rca_data.get("root_cause_category"),
                     fix_applied=rca_data.get("fix_applied"),
                     prevention_steps=rca_data.get("prevention_steps"),
+                    incident_start=start_time,
+                    incident_end=end_time,
                     mttr_minutes=mttr_minutes
                 )
                 session.add(rca)
